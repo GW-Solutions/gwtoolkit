@@ -1,4 +1,5 @@
 import collections
+import pandas as pd
 
 from gwtoolkit.logger.parsers.utils import get_datetime, get_csv_reader, md5, do_get, get_float
 
@@ -29,14 +30,19 @@ def parse_groundwater_csv_in_memory(fobj,
                                     logger,
                                     station,
                                     *,
+                                    sheetname=None,
                                     baro_ts=None,
                                     baro_file_name=None):
     """Parse groundwater data. Need to handle errors"""
     # gw_file = GroundWaterSourceFile(filename=fobj.name, hash=md5(fobj))
     fobj.file.seek(0)
     with fobj.open() as f:
-        reader = get_csv_reader(f, header_row)
-        for count, row in enumerate(reader):
+        # reader = get_csv_reader(f, header_row)
+        if f.name.endswith('.xlsx'):
+            reader = pd.read_excel(f, header=header_row-1, sheetname=sheetname)
+        else:
+            reader = pd.read_csv(f, header=header_row-1)
+        for count, row in enumerate(reader.itertuples(index=False)):
             datetime = get_datetime(row, mappings)
             if baro_ts is not None:
                 baro_level_m = _get_barometric_pressure(baro_ts, datetime)

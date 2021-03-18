@@ -15,23 +15,21 @@ def get_datetime(row, mappings):
         if time:
             date = f"{date} {time}"
         datetime = date
-    try:
-        parser.parse(datetime)
-    except:
-        import ipdb;
-        ipdb.set_trace()
+
+    parser.parse(datetime)
+
     return parser.parse(datetime)
 
 
 def do_get(row, mappings, key):
     col = mappings.get(key)
     if col:
-        return row[col]
+        return getattr(row, col)
 
 def get_float(row, mappings, key):
     col = mappings.get(key)
     if col:
-        return float(row[col])
+        return float(getattr(row, col))
 
 def get_csv_reader(f, header_row):
     for _ in range(header_row - 1):

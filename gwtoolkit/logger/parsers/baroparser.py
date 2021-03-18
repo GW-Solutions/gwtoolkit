@@ -4,15 +4,19 @@ from gwtoolkit.conversions import BARO_CONVERSIONS_TO_MH2O
 from gwtoolkit.logger.parsers.utils import get_datetime, get_csv_reader
 
 
-def parse_barometric_pressure_file(fobj, header_row, mappings, units):
+def parse_barometric_pressure_file(fobj, header_row, mappings, units, *, sheetname=None):
     with fobj.open() as f:
-        reader = get_csv_reader(f, header_row)
+        # reader = get_csv_reader(f, header_row)
+        if f.name.endswith('.xlsx'):
+            reader = pd.read_excel(f, header=header_row-1, sheetname=sheetname)
+        else:
+            reader = pd.read_csv(f, header=header_row-1)
         datetimes = []
         pressures = []
         conversion_func = BARO_CONVERSIONS_TO_MH2O[units.lower()]
-        for row in reader:
+        for row in reader.itertuples(index=False):
             datetime = get_datetime(row, mappings)
-            pressure = row[mappings["barometric_pressure"]]
+            pressure = getattr(row, mappings["barometric_pressure"])
             pressure_mh2o = conversion_func(float(pressure))
             datetimes.append(datetime)
             pressures.append(pressure_mh2o)
