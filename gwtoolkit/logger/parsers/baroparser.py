@@ -8,7 +8,7 @@ def parse_barometric_pressure_file(fobj, header_row, mappings, units, *, sheetna
     with fobj.open() as f:
         # reader = get_csv_reader(f, header_row)
         if f.name.endswith('.xlsx'):
-            reader = pd.read_excel(f, header=header_row-1, sheetname=sheetname)
+            reader = pd.read_excel(f, header=header_row-1, sheet_name=sheetname)
         else:
             reader = pd.read_csv(f, header=header_row-1)
         datetimes = []

@@ -9,16 +9,19 @@ def get_datetime(row, mappings):
     datetime = do_get(row, mappings, "datetime")
     date = do_get(row, mappings, "date")
     time = do_get(row, mappings, "time")
+
     if not datetime and not date:
         raise Exception("Must contain either either datetime fields or date and time fields")
+    if date:
+        date = str(date).split()[0]  # TODO FIX
     if not datetime:
         if time:
             date = f"{date} {time}"
         datetime = date
 
-    parser.parse(datetime)
+    # parser.parse(str(datetime))
 
-    return parser.parse(datetime)
+    return parser.parse(str(datetime))
 
 
 def do_get(row, mappings, key):

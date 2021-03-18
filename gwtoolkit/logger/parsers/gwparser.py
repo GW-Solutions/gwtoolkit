@@ -39,9 +39,9 @@ def parse_groundwater_csv_in_memory(fobj,
     with fobj.open() as f:
         # reader = get_csv_reader(f, header_row)
         if f.name.endswith('.xlsx'):
-            reader = pd.read_excel(f, header=header_row-1, sheetname=sheetname)
+            reader = pd.read_excel(f, header=header_row-1, sheet_name=sheetname, parse_dates=False)
         else:
-            reader = pd.read_csv(f, header=header_row-1)
+            reader = pd.read_csv(f, header=header_row-1, parse_dates=False)
         for count, row in enumerate(reader.itertuples(index=False)):
             datetime = get_datetime(row, mappings)
             if baro_ts is not None:
@@ -80,7 +80,8 @@ def parse_groundwater_csv_in_memory(fobj,
 
 
 def _get_barometric_pressure(baro_ts, datetime):
-    print("Input", datetime, "Nearest", baro_ts.index[baro_ts.index.get_loc(datetime, method='nearest')])
+    # print("Input", datetime, "Nearest", baro_ts.index[baro_ts.index.get_loc(datetime, method='nearest')])
+    # import ipdb; ipdb.set_trace()
     return baro_ts.iloc[baro_ts.index.get_loc(datetime, method='nearest')]
 
 
