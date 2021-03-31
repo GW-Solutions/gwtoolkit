@@ -18,20 +18,17 @@ def get_datetime(row, mappings):
         if time:
             date = f"{date} {time}"
         datetime = date
-
-    # parser.parse(str(datetime))
-
     return parser.parse(str(datetime))
 
 
 def do_get(row, mappings, key):
     col = mappings.get(key)
-    if col:
+    if col and col != 'undefined':  #TODO fix data flow
         return getattr(row, col)
 
 def get_float(row, mappings, key):
     col = mappings.get(key)
-    if col:
+    if col and col != 'undefined':
         return float(getattr(row, col))
 
 def get_csv_reader(f, header_row):

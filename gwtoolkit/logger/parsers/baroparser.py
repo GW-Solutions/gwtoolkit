@@ -6,7 +6,6 @@ from gwtoolkit.logger.parsers.utils import get_datetime, get_csv_reader
 
 def parse_barometric_pressure_file(fobj, header_row, mappings, units, *, sheetname=None):
     with fobj.open() as f:
-        # reader = get_csv_reader(f, header_row)
         if f.name.endswith('.xlsx'):
             reader = pd.read_excel(f, header=header_row-1, sheet_name=sheetname)
         else:

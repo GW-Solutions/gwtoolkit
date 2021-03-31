@@ -1,4 +1,5 @@
 import collections
+from dateutil import parser
 import pandas as pd
 
 from gwtoolkit.logger.parsers.utils import get_datetime, get_csv_reader, md5, do_get, get_float
@@ -42,13 +43,19 @@ def parse_groundwater_csv_in_memory(fobj,
             reader = pd.read_excel(f, header=header_row-1, sheet_name=sheetname, parse_dates=False)
         else:
             reader = pd.read_csv(f, header=header_row-1, parse_dates=False)
+        import functools
+        partial_dt = functools.partial(get_datetime, mappings=mappings)
+        reader['datetime'] = reader.apply(partial_dt, axis=1)
+        # Handle manual depth to water measurements
+        manual_logger_depth_m = _get_logger_depth(reader, mappings, baro_ts)
         for count, row in enumerate(reader.itertuples(index=False)):
             datetime = get_datetime(row, mappings)
             if baro_ts is not None:
                 baro_level_m = _get_barometric_pressure(baro_ts, datetime)
             else:
                 baro_level_m = do_get(row, mappings, "barometric_pressure_m")
-            comp_values = _get_compensated_values(row, mappings, baro_level_m)
+            comp_values = _get_compensated_values(
+                row, mappings, baro_level_m, manual_logger_depth_m=manual_logger_depth_m)
             # TODO: CHECK baro pressure within 3 days
             if logger:
                 logger = logger.obj
@@ -74,18 +81,34 @@ def parse_groundwater_csv_in_memory(fobj,
                 water_level_compensated_m=comp_values.water_level_compensated_m,
                 water_level_non_compensated_m=do_get(row, mappings, "water_level_non_compensated_m")
             )
-            # import ipdb;
-            # ipdb.set_trace()
+
             yield gw
 
 
+
+def _get_logger_depth(reader, mappings, baro_ts):
+    manual_measurement = mappings.get('depth_to_water_manual')
+    if manual_measurement:
+        manual_measurement_dt = mappings['depth_to_water_manual_time']
+        dt = parser.parse(manual_measurement_dt)
+        dt_index = pd.to_datetime(reader['datetime'].tolist())
+
+        ndx = dt_index.get_loc(dt, method='nearest')
+        closest_row = reader.iloc[ndx]
+        barometric_pressure = None
+        if baro_ts is not None:
+            dt = get_datetime(closest_row, mappings)
+            barometric_pressure = _get_barometric_pressure(baro_ts, dt)
+        compensated_values = _get_compensated_values(closest_row, mappings, barometric_pressure)
+        if compensated_values.water_level_compensated_m:
+            return float(manual_measurement) + compensated_values.water_level_compensated_m
+
 def _get_barometric_pressure(baro_ts, datetime):
     # print("Input", datetime, "Nearest", baro_ts.index[baro_ts.index.get_loc(datetime, method='nearest')])
-    # import ipdb; ipdb.set_trace()
     return baro_ts.iloc[baro_ts.index.get_loc(datetime, method='nearest')]
 
 
-def _get_compensated_values(row, mappings, barometric_pressure_m):
+def _get_compensated_values(row, mappings, barometric_pressure_m, *, manual_logger_depth_m=None):
     """
     Rules:
     level_logger_comp = level_logger_non_comp - barometric pressure
@@ -97,6 +120,8 @@ def _get_compensated_values(row, mappings, barometric_pressure_m):
     level_logger_non_compenstated = get_float(row, mappings, "water_level_non_compensated_m")
     depth_to_water_mtoc = get_float(row, mappings, "depth_to_water_mtoc")
     logger_depth_m = get_float(row, mappings, "logger_depth_m")
+    if not logger_depth_m:
+        logger_depth_m = manual_logger_depth_m
     logger_depth_mtoc = get_float(row, mappings, "logger_depth_mtoc")  # TODO use value
     mtoc = get_float(row, mappings, "mtoc")  #TODO: Fix this name
     ground_elevation_m = get_float(row, mappings, "ground_elevation_m")
