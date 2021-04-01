@@ -40,7 +40,7 @@ def parse_groundwater_csv_in_memory(fobj,
     with fobj.open() as f:
         # reader = get_csv_reader(f, header_row)
         if f.name.endswith('.xlsx'):
-            reader = pd.read_excel(f, header=header_row-1, sheet_name=sheetname, parse_dates=False)
+            reader = pd.read_excel(f, header=header_row-1, sheet_name=int(sheetname) - 1, parse_dates=False)
         else:
             reader = pd.read_csv(f, header=header_row-1, parse_dates=False)
         import functools
