@@ -57,8 +57,8 @@ def parse_groundwater_csv_in_memory(fobj,
             comp_values = _get_compensated_values(
                 row, mappings, baro_level_m, manual_logger_depth_m=manual_logger_depth_m)
             # TODO: CHECK baro pressure within 3 days
-            if logger:
-                logger = logger.obj
+            # if logger:
+            #     logger = logger.obj
 
             gw = GroundWater(
                 approval_level=do_get(row, mappings, "approval_level"),
