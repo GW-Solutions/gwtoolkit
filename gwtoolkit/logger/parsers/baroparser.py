@@ -1,7 +1,7 @@
 import pandas as pd
 
 from gwtoolkit.conversions import BARO_CONVERSIONS_TO_MH2O
-from gwtoolkit.logger.parsers.utils import get_datetime, get_csv_reader
+from gwtoolkit.utils import get_datetime
 
 
 def parse_barometric_pressure_file(fobj, header_row, mappings, units, *, sheetname=None):

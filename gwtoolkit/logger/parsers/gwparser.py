@@ -2,7 +2,7 @@ import collections
 from dateutil import parser
 import pandas as pd
 
-from gwtoolkit.logger.parsers.utils import get_datetime, get_csv_reader, md5, do_get, get_float
+from gwtoolkit.utils import get_datetime, do_get, get_float
 
 
 CompensatedValues = collections.namedtuple(
@@ -87,6 +87,8 @@ def parse_groundwater_csv_in_memory(fobj,
 
 
 def _get_logger_depth(reader, mappings, baro_ts):
+    # import ipdb;
+    # ipdb.set_trace()
     manual_measurement = mappings.get('depth_to_water_manual')
     if manual_measurement:
         manual_measurement_dt = mappings['depth_to_water_manual_time']
@@ -102,6 +104,9 @@ def _get_logger_depth(reader, mappings, baro_ts):
         compensated_values = _get_compensated_values(closest_row, mappings, barometric_pressure)
         if compensated_values.water_level_compensated_m:
             return float(manual_measurement) + compensated_values.water_level_compensated_m
+
+    elif mappings.get('logger_depth_manual'):
+        return float(mappings['logger_depth_manual'])
 
 def _get_barometric_pressure(baro_ts, datetime):
     # print("Input", datetime, "Nearest", baro_ts.index[baro_ts.index.get_loc(datetime, method='nearest')])

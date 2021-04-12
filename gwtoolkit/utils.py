@@ -5,6 +5,19 @@ from io import StringIO
 from dateutil import parser
 
 
+def batcher(generator, fobj, header_row, mappings, model_class, source_file, *, sheetname=None):
+    batch = []
+    for count, model_obj in enumerate(generator(fobj, header_row, mappings, model_class, source_file, sheetname=sheetname)):
+        batch.append(model_obj)
+        if count != 0 and count % 100 == 0:
+            model_class.objects.bulk_create(batch)
+            batch = []
+            print('Created batch')
+    if batch:
+        model_class.objects.bulk_create(batch)
+        print('Created final batch')
+
+
 def get_datetime(row, mappings):
     datetime = do_get(row, mappings, "datetime")
     date = do_get(row, mappings, "date")
@@ -25,6 +38,15 @@ def do_get(row, mappings, key):
     col = mappings.get(key)
     if col and col != 'undefined':  #TODO fix data flow
         return getattr(row, col)
+
+def do_ndx_get(row, mappings, key, column_ndx):
+
+    col = mappings.get(key)
+    if col and col != 'undefined':  #TODO fix data flow
+        # import ipdb;
+        # ipdb.set_trace()
+        ndx = column_ndx[col]
+        return row[ndx]
 
 def get_float(row, mappings, key):
     col = mappings.get(key)
